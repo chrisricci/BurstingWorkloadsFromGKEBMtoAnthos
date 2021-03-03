@@ -9,6 +9,11 @@ First create the notification channels
 export PROJECT_ID=$(gcloud config list --format \
   "value(core.project)")
 export REGION=us-central1
+export ON_PREM_KNATIVE_HOST=$(kubectl --context on-prem get ksvc helloworld-python \
+  -o=jsonpath='{.status.url}' | sed -e 's#^http://##')
+
+export ON_GCP_KNATIVE_HOST=$(kubectl --context on-gcp get ksvc helloworld-python \
+  -o=jsonpath='{.status.url}' | sed -e 's#^http://##')
   
 export SCALE_UP_CHANNEL=$(gcloud alpha monitoring channels create \
   --display-name="Hybrid Burst Scale Up" \
@@ -208,7 +213,7 @@ gcloud beta run deploy cloud-burst-scale-up --image ${IMAGENAME} \
   --platform=managed \
   --ingress=internal \
   --set-env-vars=_ON_GCP_BACKEND_SERVICE=istio-ig-backend-service \
-  --set-env-vars=_ON_GCP_HOST=hello-world-kuberun.default.internal.riccic.com \
+  --set-env-vars=_ON_GCP_HOST=${ON_GCP_HOST} \
   --set-env-vars=_ON_GCP_WEIGHT=50 \
   --set-env-vars=_ON_PREM_BACKEND_SERVICE=td-on-prem-backend-service \
   --set-env-vars=_ON_PREM_HOST=helloworld-python.default.knative.riccic.com \
@@ -220,7 +225,7 @@ gcloud beta run deploy cloud-burst-scale-down --image ${IMAGENAME} \
   --platform=managed \
   --ingress=internal \
   --set-env-vars=_ON_GCP_BACKEND_SERVICE=istio-ig-backend-service \
-  --set-env-vars=_ON_GCP_HOST=hello-world-kuberun.default.internal.riccic.com \
+  --set-env-vars=_ON_GCP_HOST=${ON_PREM_HOST} \
   --set-env-vars=_ON_GCP_WEIGHT=0 \
   --set-env-vars=_ON_PREM_BACKEND_SERVICE=td-on-prem-backend-service \
   --set-env-vars=_ON_PREM_HOST=helloworld-python.default.knative.riccic.com \
